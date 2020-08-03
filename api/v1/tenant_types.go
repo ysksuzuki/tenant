@@ -17,6 +17,7 @@ limitations under the License.
 package v1
 
 import (
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -28,8 +29,16 @@ type TenantSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Tenant. Edit Tenant_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Namespaces are the names of the namespaces that belong to the tenant
+	// +kubebuiler:validation:Required
+	// +kubebuiler:validation:MinItems=1
+	Namespaces []string `json:"namespaces"`
+	// NamespacePrefix is the prefix for the name of namespaces
+	// +optional
+	NamespacePrefix string `json:"namespacePrefix,omitempty"`
+	// Admin is the identity with admin for the tenant
+	// +kubebuiler:validation:Required
+	Admin rbacv1.Subject `json:"admin"`
 }
 
 // TenantStatus defines the observed state of Tenant
