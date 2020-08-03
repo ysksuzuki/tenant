@@ -43,10 +43,18 @@ type TenantReconciler struct {
 //! [rbac]
 
 func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	_ = context.Background()
-	_ = r.Log.WithValues("tenant", req.NamespacedName)
+	ctx := context.Background()
+	log := r.Log.WithValues("tenant", req.NamespacedName)
 
 	// your logic here
+	var tenant multitenancyv1.Tenant
+	err := r.Get(ctx, req.NamespacedName, &tenant)
+	//! [get]
+	if err != nil {
+		log.Error(err, "unable to get tenant", "name", req.NamespacedName)
+		return ctrl.Result{}, err
+	}
+	log.Info("Tenant Info", "tenant", tenant)
 
 	return ctrl.Result{}, nil
 }
