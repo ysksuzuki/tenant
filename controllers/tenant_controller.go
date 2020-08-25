@@ -19,6 +19,9 @@ package controllers
 import (
 	"context"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -46,15 +49,28 @@ func (r *TenantReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	log := r.Log.WithValues("tenant", req.NamespacedName)
 
-	// your logic here
 	var tenant multitenancyv1.Tenant
 	err := r.Get(ctx, req.NamespacedName, &tenant)
-	//! [get]
 	if err != nil {
 		log.Error(err, "unable to get tenant", "name", req.NamespacedName)
 		return ctrl.Result{}, err
 	}
 	log.Info("Tenant Info", "tenant", tenant)
+
+	for _, name := range tenant.Spec.Namespaces {
+		ns := &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: name,
+			},
+		}
+		_, err = ctrl.CreateOrUpdate(ctx, r, ns, func() error {
+			return nil
+		})
+		if err != nil {
+			log.Error(err, "unable to create the namespace", "name", ns)
+			return ctrl.Result{}, err
+		}
+	}
 
 	return ctrl.Result{}, nil
 }
